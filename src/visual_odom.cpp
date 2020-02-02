@@ -51,10 +51,10 @@ bool VisualOdom::process(cv::Mat &im2, vpHomogeneousMatrix &_M)
   else
   {
     // detect point features into kp2, des2
-    // TO DO
+
     akaze->detectAndCompute(img,cv::noArray(), kp2, des2);
     // match with stored features
-    // TO DO
+
     matcher.match(des1, des2, matches);
     // build vectors of matched points
     std::vector<cv::Point2f> matched1, matched2;
@@ -70,7 +70,6 @@ bool VisualOdom::process(cv::Mat &im2, vpHomogeneousMatrix &_M)
     Hp = findHomography(matched1,matched2,mask,cv::RANSAC,5);
 
     // show correct matches
-    cv::Mat imatches;
     cv::drawMatches(im1, kp1, im2, kp2, matches, imatches, cv::Scalar::all(-1), cv::Scalar::all(-1), mask);
     cv::imshow("Matches", imatches);
 
@@ -140,10 +139,13 @@ bool VisualOdom::process(cv::Mat &im2, vpHomogeneousMatrix &_M)
         // compare normals H[0].n and H[1].n to current normal estimation n_guess
         // change idx to 1 if needed
         // TO DO
-          if(abs(H[0].n.t()*n_guess)<abs(H[1].n.t()*n_guess)){
-             idx=1;
+          auto prod1 = H[0].n.t()*n_guess ;
+          auto prod2 = H[1].n.t()*n_guess ;
+          //if (abs(prod2)-1 < abs(prod1)-1) {
+          if (prod2 * prod2 > prod1 * prod1) {
+              idx = 1;
           }
-
+          cout << "Best solution found - "<<idx << endl;
       }
       if(H.size() == 1)
       {
@@ -183,15 +185,16 @@ bool VisualOdom::process(cv::Mat &im2, vpHomogeneousMatrix &_M)
         vpColVector X2;
         vpRowVector d(X1.getCols());
         double Z1;
+        vpColVector X;
         for(unsigned int i=0;i<X1.getCols();++i)
         {
           // Z1 from current distance guess
           // TO DO
           Z1 = d_guess/(H[idx].n.t()*X1.getCol(i));
-          X1.getCol(i) = Z1*X1.getCol(i);
+          auto X = Z1 * X1.getCol(i);
           //  Coordinates of X in frame of camera 2
           // TO DO
-          X2 = H[idx].R*X1.getCol(i)+H[idx].t;
+          X2 = H[idx].R * X + H[idx].t;
           // corresponding distance d in camera 2
           // TO DO
           d[i] = n_guess.t()*X2;

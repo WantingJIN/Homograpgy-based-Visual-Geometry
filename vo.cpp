@@ -19,7 +19,7 @@ int main(int argc, char ** argv)
     vpHomogeneousMatrix cMo0(-0.1,-0.1,0.7,0,0,0);
 
     // visual odometer
-    bool relative_to_initial = false;
+    bool relative_to_initial = true;
     VisualOdom vo(cam, relative_to_initial);
 
     // give 3D hints
@@ -63,9 +63,14 @@ int main(int argc, char ** argv)
                 compute_initial_pose = false;
             }
 
-            cMo = M * cMo;
             // update cMo
-            // TO DO
+            // TODO
+            if(relative_to_initial) {
+                cMo = M*cMo0;
+            }
+            else {
+                cMo = M*cMo;
+            }
 
         }
 
@@ -76,16 +81,4 @@ int main(int argc, char ** argv)
         cv::waitKey(100);
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
